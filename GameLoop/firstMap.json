@@ -1,0 +1,22 @@
+{
+    "Path1": {
+        "orientation": "Down",
+        "travel": 150
+    },
+    "Path2": {
+        "orientation": "Right",
+        "travel": 100
+    },
+    "Path3": {
+        "orientation": "Up",
+        "travel": 150
+    },
+    "Path4": {
+        "orientation": "Right",
+        "travel": 150
+    },
+    "Path5": {
+        "orientation": "Down",
+        "travel": 100
+    }
+}

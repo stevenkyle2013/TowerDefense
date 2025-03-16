@@ -3,16 +3,25 @@ let sandImg = document.getElementById("sandImg")
 let cactusImg = document.getElementById("cactusImg")
 let eiffelTowerImg = document.getElementById("eiffelTowerImg")
 let displayedHealth = document.getElementById("health")
+let displayedGold = document.getElementById("gold")
 let htmlCanvas = document.querySelector("canvas")
-let turretPurchaseTest = document.getElementById("TestTurretPurchase")
 
 class player {
-    constructor(health){
+    constructor(health, gold){
         this.health = health
+        this.gold = gold
     }
 
     takeDamage(damage) {
         this.health = this.health - damage
+    }
+
+    addGold(gold) {
+        this.gold = this.gold + gold
+    }
+
+    subtractGold(gold) {
+        this.gold = this.gold - gold
     }
 }
 
@@ -109,10 +118,13 @@ class canvas {
         this.towersPurchased = []
     }
 
-    addTower(){
+    removeTowerPlot(towerIndex) {
+        this.towerPlots.splice(towerIndex,1)
+    }
 
-        
-        this.towersPurchased.push(this.towerPlots[0])
+    addTower(tower, player){
+        this.towersPurchased.push(tower)
+
     }
 
     drawMap(image, imageWidth, imageHeight) {
@@ -123,13 +135,10 @@ class canvas {
         }
 
         this.towerPlots.forEach(plot => {
-            this.map.beginPath()
-            this.map.arc(plot.xPos, plot.yPos, 40, 0, 2 * Math.PI)
             this.map.fillStyle = "blue"
-            this.map.fill()
-            this.map.stroke()
+            this.map.fillRect(plot.xPos, plot.yPos, 30, 30)
+            this.map.fillText("Purchase Tower", plot.xPos, plot.yPos)
         })
-
 
         this.towersPurchased.forEach(tower => {
             this.map.drawImage(tower.image, tower.xPos, tower.yPos)
@@ -138,10 +147,30 @@ class canvas {
 }
 
 class towers {
-    constructor(damage, attackSpeed, range){
-        this.damage = damage
-        this.attackSpeed = attackSpeed
-        this.range = range
+    constructor(towerPlot, xPos, yPos){
+        this.damage = 50
+        this.attackSpeed = 1
+        this.range = 40
+        this.towerPlot = towerPlot
+        this.xPos = xPos
+        this.yPos = yPos
+        this.image = eiffelTowerImg
+        this.price = 100
+    }
+}
+
+/*
+Moving purchasing of tower into new class for gameOperations
+*/
+class gameOperations {
+    purchaseTower(gameCanvas, towerPlot, player) {
+        if (player.gold < gameCanvas.towerPlots[i].price) {
+            console.log("Not enough gold to purchase")
+            return
+        }
+
+
+
     }
 }
 
@@ -163,6 +192,7 @@ function gameLoop() {
 
     gameCanvas.drawMap(sandImg, 8, 8)
 
+    //Monster generator
     if (iterator >= 60) {
         monsterList.push(new monsters(health=100, strength = 5, monsterImg, width, height, xPos, yPos, traveled, 1))
         iterator -= 60
@@ -170,11 +200,6 @@ function gameLoop() {
     iterator ++
 
     let killList = []
-
-    if(createTurret1) {
-        gameCanvas.addTower()
-        createTurret1 = false
-    }
 
     monsterList.forEach(monster => {
 
@@ -184,8 +209,6 @@ function gameLoop() {
             let monsterIndex = monsterList.indexOf(monster)
             killList.push(monsterIndex)
             player1.takeDamage(monster.strength)
-            displayedHealth.textContent = `Health: ${player1.health}` 
-            console.log(player1.health)
         } else {
 
             monster.moveForward(gameCanvas.map, pathToFollow)
@@ -201,6 +224,9 @@ function gameLoop() {
         monsterList.splice(killed,1)
     })
 
+    displayedHealth.textContent = `Health: ${player1.health}` 
+    displayedGold.textContent = `Gold: ${player1.gold}` 
+
     if(player1.health <= 0) {
         return
     }
@@ -208,19 +234,32 @@ function gameLoop() {
     requestAnimationFrame(gameLoop)
 }
 
-
-let player1 = new player(health = 100)
+let player1 = new player(health = 100, gold = 250)
 let gameCanvas = new canvas(htmlCanvas)
 
-//For checking placement/position
-htmlCanvas.addEventListener("mousemove", (e)=>{
-    console.log("X Position", e.offsetX)
-    console.log("Y Position", e.offsetY)
-})
 
 //Add event listener to button to test purchasing
-turretPurchaseTest.addEventListener("click", function (){
-    createTurret1 = !createTurret1
+gameCanvas.canvas.addEventListener("click", function (e){
+    //console.log("X Position", e.offsetX)
+    //console.log("Y Position", e.offsetY)
+    
+    //When clicked if there are tower plots that are ready to be purchased then buy correct one
+    if (gameCanvas.towerPlots.length > 0 ) {
+        for (let i=0; i < gameCanvas.towerPlots.length; i++) {
+            if(e.offsetX > gameCanvas.towerPlots[i].xPos - 50 &&
+                e.offsetX < gameCanvas.towerPlots[i].xPos + 50 &&
+                e.offsetY > gameCanvas.towerPlots[i].yPos - 50 && 
+                e.offsetY < gameCanvas.towerPlots[i].yPos + 50
+            ) {
+                //add tower to tower list
+                gameCanvas.addTower(new towers(gameCanvas.towerPlots[i].TowerPlot,gameCanvas.towerPlots[i].xPos,gameCanvas.towerPlots[i].yPos))
+                //take towerPlot off of list
+                gameCanvas.removeTowerPlot(i)
+
+            }
+        }
+    }
+
 })
 
 gameLoop();

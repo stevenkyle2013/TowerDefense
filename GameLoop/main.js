@@ -6,6 +6,10 @@ let displayedHealth = document.getElementById("health")
 let displayedGold = document.getElementById("gold")
 let htmlCanvas = document.querySelector("canvas")
 
+
+/**
+ * This class houses the player stats
+ */
 class player {
     constructor(health, gold){
         this.health = health
@@ -25,6 +29,9 @@ class player {
     }
 }
 
+/**
+ * This class houses the monster information, also houses the actual movement of the monster
+ */
 class monsters {
     constructor(health, strength, image, width, height, xPos, yPos, traveled, pathNumber) {
         this.health = health;
@@ -57,10 +64,15 @@ class monsters {
     }
 }
 
-function purchaseTower() {
-
-}
-
+/**
+ * This class houses the game canvas/map, it will store a bulk of the game information
+ * Things like...
+ * the monsters pathing
+ * where towers can be purchased and for what price
+ * towers that were purchased
+ * The actual drawing of the game board (minus monsters)
+ * 
+ */
 class canvas {
     constructor(canvas) {
         this.canvas = canvas
@@ -94,37 +106,41 @@ class canvas {
                 "TowerPlot": 1,
                 "image": eiffelTowerImg,
                 "xPos": 250,
-                "yPos": 200
+                "yPos": 200,
+                "price": 50
             },
             {
                 "TowerPlot": 2,
                 "image": eiffelTowerImg,
                 "xPos": 350,
-                "yPos": 650
+                "yPos": 650,
+                "price": 50,
             },
             {
                 "TowerPlot": 3,
                 "image": eiffelTowerImg,
                 "xPos": 700,
-                "yPos": 300
+                "yPos": 300,
+                "price": 50,
             },
             {
                 "TowerPlot": 4,
                 "image": eiffelTowerImg,
                 "xPos": 700,
-                "yPos": 750
+                "yPos": 750,
+                "price": 50,
             }
         ]
         this.towersPurchased = []
     }
 
     removeTowerPlot(towerIndex) {
-        this.towerPlots.splice(towerIndex,1)
+        let tower = this.towerPlots.splice(towerIndex,1)
+        return tower[0]
     }
 
-    addTower(tower, player){
+    addTower(tower){
         this.towersPurchased.push(tower)
-
     }
 
     drawMap(image, imageWidth, imageHeight) {
@@ -146,6 +162,9 @@ class canvas {
     }
 }
 
+/**
+ * This class houses specifics about towers
+ */
 class towers {
     constructor(towerPlot, xPos, yPos){
         this.damage = 50
@@ -155,22 +174,29 @@ class towers {
         this.xPos = xPos
         this.yPos = yPos
         this.image = eiffelTowerImg
-        this.price = 100
+        this.upgradePrice = 100
     }
 }
 
-/*
-Moving purchasing of tower into new class for gameOperations
-*/
-class gameOperations {
-    purchaseTower(gameCanvas, towerPlot, player) {
-        if (player.gold < gameCanvas.towerPlots[i].price) {
+/**
+ * This class houses the game operations that will be used in play
+ */
+class GameOperations {
+    purchaseTower(gameCanvas, towerIndex, player) {
+
+        //Stop if player doesn't have enough gold
+        if (player.gold < gameCanvas.towerPlots[towerIndex].price) {
             console.log("Not enough gold to purchase")
             return
         }
 
+        //If player has enough gold, remove the plot and add tower
+        let towerPlot = gameCanvas.removeTowerPlot(towerIndex)
+        let tower = new towers(towerPlot, towerPlot.xPos, towerPlot.yPos)
+        gameCanvas.addTower(tower)
 
-
+        //Decrease Player money
+        player.subtractGold(towerPlot.price)
     }
 }
 
@@ -236,6 +262,7 @@ function gameLoop() {
 
 let player1 = new player(health = 100, gold = 250)
 let gameCanvas = new canvas(htmlCanvas)
+let gameOperations = new GameOperations
 
 
 //Add event listener to button to test purchasing
@@ -251,11 +278,8 @@ gameCanvas.canvas.addEventListener("click", function (e){
                 e.offsetY > gameCanvas.towerPlots[i].yPos - 50 && 
                 e.offsetY < gameCanvas.towerPlots[i].yPos + 50
             ) {
-                //add tower to tower list
-                gameCanvas.addTower(new towers(gameCanvas.towerPlots[i].TowerPlot,gameCanvas.towerPlots[i].xPos,gameCanvas.towerPlots[i].yPos))
-                //take towerPlot off of list
-                gameCanvas.removeTowerPlot(i)
-
+                //Purchase tower from game operations
+                gameOperations.purchaseTower(gameCanvas, i, player1)
             }
         }
     }
